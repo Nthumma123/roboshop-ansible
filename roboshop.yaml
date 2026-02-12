@@ -5,7 +5,8 @@
     sg_id: "sg-04afc53a2f45b85cc"
     ami_id: "ami-0220d79f3f480ecf5"
     domain_name: "neelimadevops.online."
-    env: dev
+    env: "dev"
+    action: "create"
     instances: 
     - mongodb
     - catalogue 
@@ -24,8 +25,7 @@
           Name: "{{ item }}-{{env}}"
         loop: "{{ instances }}"
         register: ec2_output
-        termination_protection: true
-        wait: true
+        when : action == "create"
 
     - name: print ec2 ec2_output
       ansible.builtin.debug: 
@@ -39,9 +39,10 @@
         type: A
         ttl: 1
         value: "{{ item.instances[0].private_ip_address }}"
-        wait: true
+        wait: false
         loop: "{{ ec2_output.results}}"
-    
+        when: action == "create"
+
     # create route53 record for fronend as roboshop.dev.neelimadevops.online
     - name: create route53 record
       amazon.aws.route53:
@@ -53,7 +54,11 @@
         value: "{{ item.instances[0].public_ip_address }}"
         wait: true
         loop: "{{ ec2_output.results}}"
-        when: item.item == "frontend"
+        when: 
+        - item.item == "frontend"
+        - action == "create"
+
+        
 
   #ansible-playbook -i localhost, roboshop.yml
   #pip install boto3
