@@ -58,9 +58,10 @@
         - item.item == "frontend"
         - action == "create"
 
-        
 
-  #ansible-playbook -i localhost, roboshop.yml
+# ansible-playbook -i localhost,   -e '{"instances":["mongodb","catalogue","redis","user","cart","mysql","shipping","rabbitmq","payment","frontend"]}'  -e action=destroy roboshop.yaml
+
+  #ansible-playbook -i localhost roboshop.yml
   #pip install boto3
   # set authentication
   #aws configure #access key #secret key #region
