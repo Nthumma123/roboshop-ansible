@@ -17,13 +17,21 @@
         home: /app
         shell: /sbin/nologin
         comment: "roboshop system user"
-
+    - name: delete app directory
+      ansible.builtin.file:
+        path: /app
+        state: absent
+        mode: '0755'
 
     - name: create app directory
       ansible.builtin.file:
         path: /app
         state: directory
         mode: '0755'
+    - name: delete catalogue code
+      ansible.builtin.file:
+        path: /tmp/catalogue.zip
+        state: absent
 
     - name: download catalogue code
       ansible.builtin.get_url:
@@ -66,7 +74,7 @@
 
     - name: load the products
       ansible.builtin.shell: mongosh --host "{{ MONGODB_HOST }}" </app/db/master-data.js
-      when: catalogue_output.stdout  | int < 0
+      when: catalogue_output.stdout  | int < 0  
 
     - name: start catalogue
       ansible.builtin.service:
