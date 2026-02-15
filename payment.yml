@@ -1,0 +1,70 @@
+- name: congigure payment
+  hosts: payment
+  become: true
+  tasks:
+    - name: install nodejs
+      ansible.builtin.dnf:
+        name: "{{item}}"
+        state: present
+        loop:
+          - python3 
+          - gcc 
+          - python3-devel
+
+        - name: create system user roboshop
+      ansible.builtin.user:
+        name: roboshop
+        system: true
+        home: /app
+        shell: /sbin/nologin
+        comment: "roboshop system user"
+    - name: delete app directory
+      ansible.builtin.file:
+        path: /app
+        state: absent
+        mode: '0755'
+
+    - name: create app directory
+      ansible.builtin.file:
+        path: /app
+        state: directory
+        mode: '0755'
+    - name: delete catalogue code
+      ansible.builtin.file:
+        path: /tmp/catalogue.zip
+        state: absent
+
+    - name: download catalogue code
+      ansible.builtin.get_url:
+        url: https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip
+        dest: /tmp/catalogue.zip
+
+    - name: unzip catalogue code
+      ansible.builtin.unarchive:
+        src: /tmp/catalogue.zip
+        dest: /app
+        remote_src: yes
+
+    - name: install dependencies
+      ansible.builtin.pip:
+        name: requirements.txt
+        executable: pip3.9
+      args:
+        chdir: /app
+
+    - name:  copy payment service
+      ansible.builtin.template:
+        src: payment.service
+        dest: /etc/systemd/system/payment.service
+
+    - name: daemon_reload
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
+    - name: start and reload payment
+      ansible.builtin.systemd:
+        name: payment
+        state: restarted
+        enabled: true
+
+

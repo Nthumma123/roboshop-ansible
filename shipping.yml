@@ -64,6 +64,23 @@
       ansible.builtin.systemd_service:
       daemon_reload: true
 
+    - name: install dependencies
+      ansible.builtin.pip:
+        name: "{{ item }}"
+        executable: pip3.9
+      loop:
+      - cryptography
+      - PyMySQL
+
+    - name: start shipping
+      ansible.builtin.service:
+         name: shipping
+         state: started
+
+    - name: load the products
+       ansible.builtin.shell: mongosh --host "{{ MONGODB_HOST }}" </app/db/master-data.js
+       when: shipping_output.stdout  | int < 0
+
     - name : import shipping data
       community.mysql.mysql_db:
         state: import
@@ -82,7 +99,7 @@
         name: shipping
         state: restarted
 
-        
+
 #mysql -h <MYSQL-SERVER-IPADDRESS> -uroot -pRoboShop@1 < /app/db/schema.sql
 #mysql -h <MYSQL-SERVER-IPADDRESS> -uroot -pRoboShop@1 < /app/db/app-user.sql 
 #mysql -h <MYSQL-SERVER-IPADDRESS> -uroot -pRoboShop@1 < /app/db/master-data.sql
