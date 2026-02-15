@@ -76,6 +76,10 @@
       ansible.builtin.shell: mongosh --host "{{ MONGODB_HOST }}" </app/db/master-data.js
       when: user_output.stdout  | int < 0  
 
+    - name: daemon reload
+      ansible.builtin.systemd_service:
+      daemon_reload: true
+
     - name: start user
       ansible.builtin.service:
         name: user
